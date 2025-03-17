@@ -1,4 +1,5 @@
 import pygame
+from pygame import Color
 
 pygame.init()
 
@@ -6,10 +7,23 @@ WIDTH, HEIGHT = 600, 600
 ROWS, COLS = 6,6
 SQUARE_SIZE = WIDTH/COLS
 
-WHITE = (255, 255, 255)
-BLACK = (0,0,0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
+
+# WHITE = (245, 222, 179)           # deepseek, qwen, gpt
+# BLACK = (101, 67, 33)
+# RED = (200, 50, 50)
+# BLUE = (40, 40, 40)
+# MOVABLE_PIECE = (255, 215, 0) #(255, 255, 100, 0.10)
+# # SELECTED_PIECE = 
+# # VALID_MOVE = 
+
+
+WHITE = Color(235, 235, 220)               # claude
+BLACK = (51, 51, 51)
+RED = (178, 34, 34)
+BLUE = (25, 25, 112)
+MOVABLE_PIECE = Color(255, 165, 0, 20)
+SELECTED_PIECE = Color(255, 69, 0, 50)  # Orange red with 50 alpha
+VALID_MOVE = Color(135, 206, 250, 100)   # Light sky blue with 100 alpha
 
 
 EMPTY = 0
@@ -35,15 +49,11 @@ selected_piece = None
 movable_pieces = []
 valid_move = []
 
-
-
 def draw_board():
     for row in range(ROWS):
         for col in range(COLS):
             color = BLACK if (row+col)%2 else WHITE
             pygame.draw.rect(screen, color, pygame.Rect(col * SQUARE_SIZE, row * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-
-
 
 def draw_pieces():
     for row in range(ROWS):
@@ -62,13 +72,31 @@ def draw_pieces():
 #     pygame.draw.polygon(screen, (0, 255, 0), [[15, 75], [25,50], [35,62], [45, 37], [55,62], [65, 50], [75, 75]])
 
 def draw_highlights():
+    # Create a surface for movable pieces highlight
+    movable_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+    movable_highlight.fill(MOVABLE_PIECE)
+
+    # Draw movable pieces highlight
     for (row, col) in movable_pieces:
-        pygame.draw.circle(screen, (0,255,0), (col * SQUARE_SIZE + SQUARE_SIZE // 2, row * SQUARE_SIZE + SQUARE_SIZE // 2), SQUARE_SIZE // 3, 5)
+        screen.blit(movable_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+
+    # Draw selected piece highlight
+    if selected_piece:
+        row, col = selected_piece
+        selected_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+        selected_highlight.fill(SELECTED_PIECE)
+        screen.blit(selected_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+
+    # Draw valid moves highlight
+    for (row, col) in valid_move:
+        valid_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+        valid_highlight.fill(VALID_MOVE)
+        screen.blit(valid_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+
 
 def get_row_col_from_mouse(pos):
     x ,y = pos
     return int(y//SQUARE_SIZE), int(x//SQUARE_SIZE)
-
 
 def get_movable_pieces():
     global movable_pieces
@@ -76,56 +104,65 @@ def get_movable_pieces():
     for row in range(ROWS):
         for col in range(COLS):
             piece = board[row][col]
-            if piece==PLAYER_PIECE:
-                if row>0 and (board[row-1][col-1] == EMPTY or board[row-1][col+1] == EMPTY):
-                    movable_pieces.append((row, col))
-
+            if piece == PLAYER_PIECE:
+                if row > 0:
+                    if col > 0 and board[row - 1][col - 1] == EMPTY:
+                        movable_pieces.append((row, col))
+                    if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
+                        movable_pieces.append((row, col))
 
 
 def computerPlay():
+    global PLAYER_TURN
     print("Now computer's turn")
     PLAYER_TURN = True
+    print("from comPlay, player Turn: ", PLAYER_TURN)
+    return
 
 
 
 def playerPlay(event):
-    global PLAYER_TURN, selected_piece, valid_move
-    print(PLAYER_TURN)
-
-    selected_piece = None
-    valid_move = []
+    global PLAYER_TURN, selected_piece, valid_move, movable_pieces
+    print("from player play, turn: ",PLAYER_TURN)
 
     if event.type == pygame.MOUSEBUTTONDOWN:
         pos = pygame.mouse.get_pos()
         row, col = get_row_col_from_mouse(pos)
         print(row, col)
         piece = board[row][col]
-        if selected_piece and (row, col) in valid_move:
-            board[row][col] = board[selected_piece[0]][selected_piece[1]]
-            board[selected_piece[0]][selected_piece[1]] = EMPTY
-            selected_piece = None
-            PLAYER_TURN = False
-        elif (not selected_piece) and ((row, col) in movable_pieces):
-            selected_piece = (row, col)
-            if row>0 and col>0:
-                valid_move.append((row-1, col-1))
-            if row>0 and col<5:
-                valid_move.append((row-1, col+1))
-            print(valid_move)
-        
+        if selected_piece:
+            if (row, col) in valid_move:
+                board[row][col] = board[selected_piece[0]][selected_piece[1]]
+                board[selected_piece[0]][selected_piece[1]] = EMPTY
+                selected_piece = None
+                valid_move = []
+                PLAYER_TURN = False  # Switch to computer's turn
 
-        # if selected_piece:
-        #     board[row][col] = board[selected_piece[0]][selected_piece[1]]
-        #     board[selected_piece[0]][selected_piece[1]] = EMPTY
-        #     selected_piece = None
-            
-        # else:
-        #     if piece != EMPTY:
-        #         selected_piece = (row, col)
+            elif piece == PLAYER_PIECE and (row, col) in movable_pieces:
+                selected_piece = (row, col)
+                valid_move = []
+                if row > 0:
+                    if col > 0 and board[row - 1][col - 1] == EMPTY:
+                        valid_move.append((row - 1, col - 1))
+                    if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
+                        valid_move.append((row - 1, col + 1))
+                print("Valid moves:", valid_move)
+                
+            # else:
+            #     selected_piece = None
+            #     valid_move = []
 
-
-        
-
+                
+        else:
+            if piece == PLAYER_PIECE and (row, col) in movable_pieces:
+                selected_piece = (row, col)
+                valid_move = []
+                if row > 0:
+                    if col > 0 and board[row - 1][col - 1] == EMPTY:
+                        valid_move.append((row - 1, col - 1))
+                    if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
+                        valid_move.append((row - 1, col + 1))
+                print("Valid moves:", valid_move)
     
 
 def main():
