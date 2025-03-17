@@ -132,6 +132,14 @@ def playerPlay(event):
                 selected_piece = None
                 valid_move = []
                 PLAYER_TURN = False
+            elif piece == PLAYER_PIECE and (row, col) in movable_pieces:
+                 selected_piece = (row, col)
+                 valid_move = []
+                 if row > 0:
+                     if col > 0 and board[row - 1][col - 1] == EMPTY:
+                         valid_move.append((row - 1, col - 1))
+                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
+                         valid_move.append((row - 1, col + 1))
         else:
             if piece == PLAYER_PIECE and (row, col) in movable_pieces:
                 selected_piece = (row, col)
