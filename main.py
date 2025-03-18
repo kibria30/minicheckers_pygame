@@ -7,13 +7,13 @@ WIDTH, HEIGHT = 600, 600
 ROWS, COLS = 6,6
 SQUARE_SIZE = WIDTH/COLS
 
-WHITE = Color(235, 235, 220)               
+WHITE = (235, 235, 220)               
 BLACK = (51, 51, 51)
 RED = (178, 34, 34)
-BLUE = (25, 25, 112)
-MOVABLE_PIECE = Color(255, 165, 0, 20)
-SELECTED_PIECE = Color(255, 69, 0, 50)  # Orange red with 50 alpha
-VALID_MOVE = Color(135, 206, 250, 100)   # Light sky blue with 100 alpha
+BLUE = (25, 25, 185)
+MOVABLE_PIECE = (0, 200, 0, 100)
+SELECTED_PIECE = (255, 255, 0, 50)
+VALID_MOVE = Color(155, 215, 255, 100) 
 
 
 EMPTY = 0
@@ -62,27 +62,26 @@ def draw_pieces():
 #     pygame.draw.polygon(screen, (0, 255, 0), [[15, 75], [25,50], [35,62], [45, 37], [55,62], [65, 50], [75, 75]])
 
 def draw_highlights():
-    # Create a surface for movable pieces highlight
-    movable_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
-    movable_highlight.fill(MOVABLE_PIECE)
-
-    # Draw movable pieces highlight
+    # Draw movable pieces highlight (hollow circle)
     for (row, col) in movable_pieces:
-        screen.blit(movable_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+        x = col * SQUARE_SIZE + SQUARE_SIZE // 2
+        y = row * SQUARE_SIZE + SQUARE_SIZE // 2
+        radius = SQUARE_SIZE // 3 + 3
+        pygame.draw.circle(screen, MOVABLE_PIECE, (x, y), radius, width=3)  # Hollow circle
 
-    # Draw selected piece highlight
+    # Draw selected piece highlight (hollow circle)
     if selected_piece:
         row, col = selected_piece
-        selected_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
-        selected_highlight.fill(SELECTED_PIECE)
-        screen.blit(selected_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
+        x = col * SQUARE_SIZE + SQUARE_SIZE // 2
+        y = row * SQUARE_SIZE + SQUARE_SIZE // 2
+        radius = SQUARE_SIZE // 3 + 3
+        pygame.draw.circle(screen, SELECTED_PIECE, (x, y), radius, width=3)  # Hollow circle
 
-    # Draw valid moves highlight
     for (row, col) in valid_move:
-        valid_highlight = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
-        valid_highlight.fill(VALID_MOVE)
-        screen.blit(valid_highlight, (col * SQUARE_SIZE, row * SQUARE_SIZE))
-
+        radius = SQUARE_SIZE // 3  # Smaller than a piece
+        valid_move_surface = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
+        pygame.draw.circle(valid_move_surface, VALID_MOVE, (SQUARE_SIZE//2, SQUARE_SIZE//2), radius)
+        screen.blit(valid_move_surface, (col * SQUARE_SIZE, row * SQUARE_SIZE))
 
 def get_row_col_from_mouse(pos):
     x ,y = pos
@@ -91,15 +90,17 @@ def get_row_col_from_mouse(pos):
 def get_movable_pieces():
     global movable_pieces
     movable_pieces = []
+    movable_pieces_set = set()
     for row in range(ROWS):
         for col in range(COLS):
             piece = board[row][col]
             if piece == PLAYER_PIECE:
                 if row > 0:
                     if col > 0 and board[row - 1][col - 1] == EMPTY:
-                        movable_pieces.append((row, col))
+                        movable_pieces_set.add((row, col))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
-                        movable_pieces.append((row, col))
+                        movable_pieces_set.add((row, col))
+    movable_pieces = list(movable_pieces_set)
 
 
 def computerPlay():
