@@ -1,5 +1,7 @@
 import pygame
 from pygame import Color
+from minimax import Minimax
+import copy
 
 pygame.init()
 
@@ -105,16 +107,24 @@ def get_movable_pieces():
 
 def computerPlay():
     global PLAYER_TURN
-    print("Now computer's turn")
+
+    engine = Minimax(3)
+    engine.minimax(board=copy.deepcopy(board), com_turn=True)
+    bestMove = engine.best_move
+
+    # if bestMove is None:
+    #     print("No valid moves for computer")
+    #     PLAYER_TURN = True
+    #     return
+
+    board[bestMove[2]][bestMove[3]] = board[bestMove[0]][bestMove[1]]
+    board[bestMove[0]][bestMove[1]] = EMPTY
     PLAYER_TURN = True
-    print("from comPlay, player Turn: ", PLAYER_TURN)
-    return
 
 
 
 def playerPlay(event):
     global PLAYER_TURN, selected_piece, valid_move, movable_pieces
-    print("from player play, turn: ",PLAYER_TURN)
 
     if event.type == pygame.MOUSEBUTTONDOWN:
         pos = pygame.mouse.get_pos()
@@ -127,8 +137,7 @@ def playerPlay(event):
                 board[selected_piece[0]][selected_piece[1]] = EMPTY
                 selected_piece = None
                 valid_move = []
-                PLAYER_TURN = False  # Switch to computer's turn
-
+                PLAYER_TURN = False
             elif piece == PLAYER_PIECE and (row, col) in movable_pieces:
                 selected_piece = (row, col)
                 valid_move = []
@@ -138,10 +147,6 @@ def playerPlay(event):
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                         valid_move.append((row - 1, col + 1))
                 print("Valid moves:", valid_move)
-                
-            # else:
-            #     selected_piece = None
-            #     valid_move = []
 
                 
         else:
@@ -154,7 +159,7 @@ def playerPlay(event):
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                         valid_move.append((row - 1, col + 1))
                 print("Valid moves:", valid_move)
-    
+
 
 def main():
     global PLAYER_TURN, movable_pieces
@@ -168,8 +173,7 @@ def main():
                 playerPlay(event)
                 
             else:
-                computerPlay()
-            
+                computerPlay()            
 
 
         draw_board()
