@@ -1,3 +1,4 @@
+import math
 import pygame
 from pygame import Color
 from minimax import Minimax
@@ -117,8 +118,14 @@ def computerPlay():
     #     PLAYER_TURN = True
     #     return
 
-    board[bestMove[2]][bestMove[3]] = board[bestMove[0]][bestMove[1]]
-    board[bestMove[0]][bestMove[1]] = EMPTY
+    if math.fabs(bestMove[2] - bestMove[0]) == 1:
+        board[bestMove[2]][bestMove[3]] = board[bestMove[0]][bestMove[1]]
+        board[bestMove[0]][bestMove[1]] = EMPTY
+    else:
+        board[bestMove[2]][bestMove[3]] = board[bestMove[0]][bestMove[1]]
+        board[bestMove[0]][bestMove[1]] = EMPTY
+        board[(bestMove[0]+bestMove[2])//2][(bestMove[1]+bestMove[3])//2] = EMPTY  
+
     PLAYER_TURN = True
 
 
@@ -138,6 +145,20 @@ def playerPlay(event):
                 selected_piece = None
                 valid_move = []
                 PLAYER_TURN = False
+
+
+                # if math.fabs(move[2] - move[0]) == 1:
+                #     board[move[2]][move[3]] = board[move[0]][move[1]]
+                #     board[move[0]][move[1]] = EMPTY
+                #     return board
+                # else:
+                #     board[move[2]][move[3]] = board[move[0]][move[1]]
+                #     board[move[0]][move[1]] = EMPTY
+                #     board[(move[0]+move[2])//2][(move[1]+move[3])//2] = EMPTY    # taken opponents piece
+                #     return board
+
+
+
             elif piece == PLAYER_PIECE and (row, col) in movable_pieces:
                 selected_piece = (row, col)
                 valid_move = []
@@ -146,6 +167,14 @@ def playerPlay(event):
                         valid_move.append((row - 1, col - 1))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                         valid_move.append((row - 1, col + 1))
+                # jump move
+                if row > 1:
+                    if col > 1 and board[row - 2][col - 2] ==  EMPTY and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):                
+                        valid_move.append((row-2, col-2))
+                    if col < COLS - 2 and board[row - 2][col + 2] == EMPTY and (board[row - 1][col+1] == COM_PIECE or board[row - 1][col+1] == COM_KING):
+                        valid_move.append((row-2, col+2))
+                    
+
                 print("Valid moves:", valid_move)
 
                 
@@ -158,7 +187,17 @@ def playerPlay(event):
                         valid_move.append((row - 1, col - 1))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                         valid_move.append((row - 1, col + 1))
+                # jump move
+                if row > 1:
+                    if col > 1 and board[row - 2][col - 2] ==  EMPTY and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):
+                        print("jump")           
+                        valid_move.append((row-2, col-2))
+                    if col < COLS - 2 and board[row - 2][col + 2] == EMPTY and (board[row - 1][col+1] == COM_PIECE or board[row - 1][col+1] == COM_KING):
+                        print("jump") 
+                        valid_move.append((row-2, col+2))
+
                 print("Valid moves:", valid_move)
+
 
 
 def main():

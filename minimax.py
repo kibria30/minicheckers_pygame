@@ -1,4 +1,5 @@
 import copy
+import math
 
 
 ROWS, COLS = 6,6
@@ -66,6 +67,12 @@ class Minimax:
                             allValidMoves.append((row, col, row+1, col-1))
                         if col < COLS - 1 and board[row + 1][col + 1] == EMPTY:
                             allValidMoves.append((row, col, row+1, col+1))
+                    # jump move
+                    if row < ROWS - 2:
+                        if col > 1 and board[row + 2][col - 2] ==  EMPTY:
+                            allValidMoves.append((row, col, row+2, col-2))
+                        if col < COLS - 2 and board[row + 2][col + 2] == EMPTY:
+                            allValidMoves.append((row, col, row+2, col+2))
         return allValidMoves
     
 
@@ -79,7 +86,26 @@ class Minimax:
                             allValidMoves.append((row, col, row-1, col-1))
                         if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                             allValidMoves.append((row, col, row-1, col+1))
+                    # jump move
+                    if row > 1:
+                        if col > 1 and board[row - 2][col - 2] ==  EMPTY:                
+                            allValidMoves.append((row, col, row-2, col-2))
+                        if col < COLS - 2 and board[row - 2][col + 2] == EMPTY:
+                            allValidMoves.append((row, col, row-2, col+2))
         return allValidMoves
+
+
+    # def possibleKingsMoves(self, board):
+    #     allJumpMoves = []
+    #     if row > 0:
+    #         if col > 0 and board[row - 1][col - 1] == EMPTY:
+    #             allValidMoves.append((row, col, row-1, col-1))
+    #         if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
+    #             allValidMoves.append((row, col, row-1, col+1))
+    #     return allValidMoves
+
+
+
 
 
     def calculatePoints(self, board):
@@ -94,6 +120,12 @@ class Minimax:
 
 
     def makeMove(self, board, move):
-        board[move[2]][move[3]] = board[move[0]][move[1]]
-        board[move[0]][move[1]] = EMPTY
-        return board
+        if math.fabs(move[2] - move[0]) == 1:
+            board[move[2]][move[3]] = board[move[0]][move[1]]
+            board[move[0]][move[1]] = EMPTY
+            return board
+        else:
+            board[move[2]][move[3]] = board[move[0]][move[1]]
+            board[move[0]][move[1]] = EMPTY
+            board[(move[0]+move[2])//2][(move[1]+move[3])//2] = EMPTY    # taken opponents piece
+            return board
