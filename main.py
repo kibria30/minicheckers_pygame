@@ -80,7 +80,7 @@ def draw_highlights():
         radius = SQUARE_SIZE // 3 + 3
         pygame.draw.circle(screen, SELECTED_PIECE, (x, y), radius, width=3)  # Hollow circle
 
-    for (row, col) in valid_move:
+    for (old_row, old_col, row, col) in valid_move:
         radius = SQUARE_SIZE // 3  # Smaller than a piece
         valid_move_surface = pygame.Surface((SQUARE_SIZE, SQUARE_SIZE), pygame.SRCALPHA)
         pygame.draw.circle(valid_move_surface, VALID_MOVE, (SQUARE_SIZE//2, SQUARE_SIZE//2), radius)
@@ -103,6 +103,13 @@ def get_movable_pieces():
                         movable_pieces_set.add((row, col))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
                         movable_pieces_set.add((row, col))
+                 # jump move
+                if row > 1:
+                    if col > 1 and board[row - 2][col - 2] ==  EMPTY and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):                
+                        movable_pieces_set.add((row, col))
+                    if col < COLS - 2 and board[row - 2][col + 2] == EMPTY and (board[row - 1][col+1] == COM_PIECE or board[row - 1][col+1] == COM_KING):
+                        movable_pieces_set.add((row, col))
+
     movable_pieces = list(movable_pieces_set)
 
 
@@ -139,23 +146,20 @@ def playerPlay(event):
         print(row, col)
         piece = board[row][col]
         if selected_piece:
-            if (row, col) in valid_move:
-                board[row][col] = board[selected_piece[0]][selected_piece[1]]
-                board[selected_piece[0]][selected_piece[1]] = EMPTY
+            if (selected_piece[0], selected_piece[1], row, col) in valid_move:
+
+                if math.fabs(row - selected_piece[0]) == 1:
+                    board[row][col] = board[selected_piece[0]][selected_piece[1]]
+                    board[selected_piece[0]][selected_piece[1]] = EMPTY
+                elif math.fabs(row - selected_piece[0]) == 2:
+                    board[row][col] = board[selected_piece[0]][selected_piece[1]]
+                    board[selected_piece[0]][selected_piece[1]] = EMPTY
+                    board[(selected_piece[0]+row)//2][(selected_piece[1]+col)//2] = EMPTY    # taken opponent's piece
+
                 selected_piece = None
                 valid_move = []
+                movable_pieces = []
                 PLAYER_TURN = False
-
-
-                # if math.fabs(move[2] - move[0]) == 1:
-                #     board[move[2]][move[3]] = board[move[0]][move[1]]
-                #     board[move[0]][move[1]] = EMPTY
-                #     return board
-                # else:
-                #     board[move[2]][move[3]] = board[move[0]][move[1]]
-                #     board[move[0]][move[1]] = EMPTY
-                #     board[(move[0]+move[2])//2][(move[1]+move[3])//2] = EMPTY    # taken opponents piece
-                #     return board
 
 
 
@@ -164,17 +168,16 @@ def playerPlay(event):
                 valid_move = []
                 if row > 0:
                     if col > 0 and board[row - 1][col - 1] == EMPTY:
-                        valid_move.append((row - 1, col - 1))
+                        valid_move.append((row, col, row - 1, col - 1))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
-                        valid_move.append((row - 1, col + 1))
+                        valid_move.append((row, col, row - 1, col + 1))
                 # jump move
                 if row > 1:
                     if col > 1 and board[row - 2][col - 2] ==  EMPTY and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):                
-                        valid_move.append((row-2, col-2))
+                        valid_move.append((row, col, row-2, col-2))
                     if col < COLS - 2 and board[row - 2][col + 2] == EMPTY and (board[row - 1][col+1] == COM_PIECE or board[row - 1][col+1] == COM_KING):
-                        valid_move.append((row-2, col+2))
+                        valid_move.append((row, col, row-2, col+2))
                     
-
                 print("Valid moves:", valid_move)
 
                 
@@ -184,17 +187,17 @@ def playerPlay(event):
                 valid_move = []
                 if row > 0:
                     if col > 0 and board[row - 1][col - 1] == EMPTY:
-                        valid_move.append((row - 1, col - 1))
+                        valid_move.append((row, col, row - 1, col - 1))
                     if col < COLS - 1 and board[row - 1][col + 1] == EMPTY:
-                        valid_move.append((row - 1, col + 1))
+                        valid_move.append((row, col, row - 1, col + 1))
                 # jump move
                 if row > 1:
-                    if col > 1 and board[row - 2][col - 2] ==  EMPTY and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):
+                    if (col > 1 and board[row - 2][col - 2] ==  EMPTY) and (board[row - 1][col-1] == COM_PIECE or board[row - 1][col-1] == COM_KING):
                         print("jump")           
-                        valid_move.append((row-2, col-2))
+                        valid_move.append((row, col, row-2, col-2))
                     if col < COLS - 2 and board[row - 2][col + 2] == EMPTY and (board[row - 1][col+1] == COM_PIECE or board[row - 1][col+1] == COM_KING):
                         print("jump") 
-                        valid_move.append((row-2, col+2))
+                        valid_move.append((row, col, row-2, col+2))
 
                 print("Valid moves:", valid_move)
 
@@ -212,6 +215,7 @@ def main():
                 playerPlay(event)
                 
             else:
+                pygame.time.wait(500)
                 computerPlay()            
 
 
